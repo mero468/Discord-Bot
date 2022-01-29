@@ -6,9 +6,8 @@ import json
 import random
 from replit import db
 
-
-
-def update_Encouragements(encouraging_message):
+# add encouragements to database
+def update_encouragements(encouraging_message):
   if "encouragements" in db.keys():
     encouragements = db["encouragements"]
     encouragements.append(encouraging_message)
@@ -16,15 +15,12 @@ def update_Encouragements(encouraging_message):
   else:
     db["encouragements"] = [encouraging_message]
 
-def delete_encouragement(encouraging_message):
-
-
-
-
-
-
-
-
+#delete and update items from encouragements database
+def delete_encouragement(index):
+  encouragements = db["encouragements"]
+  if len(encouragements)>index :
+    del encouragements[index]
+    db["encouragements"] = encouragements
 
 #sad words 
 sad_word = ['sad','depressing','unhappy','angry','miserable','unhappy','depressed']
@@ -59,13 +55,37 @@ async def on_message(message):
   if message.author == client.user:
     return
 
+  #$hello command
   if message.content.startswith('$hello'):
     await message.channel.send("Hello!")
-  
+
+  #$quote command
   if message.content.startswith('$quote'):
     quote = get_quote()
     await message.channel.send(quote)
+  
+  options = starter_encouragements
+  if "encouragements" in db.keys():
+    options = options + db["encouragements"]
 
+  if message.content.startswith('$new'):
+    encouraging_message = msg.split('$new',1)[1]
+    update_encouragements(encouraging_message)
+    await message.channel.send("New encouraging_message added!")
+  
+  if message.content.startswith('$del'):
+    encouragements = []
+    if "encouragements" in db.keys():
+      index =int(msg.split('$del',1)[1])
+      delete_encouragement(index)
+      encouragements = db["encouragements"]
+      await message.channel.send(encouragements)
+    else:
+      await message.channel.send("Encouraging message couldn't be found")
+
+
+  #detect sad word
   if any(word in msg for word in sad_word):
     await message.channel.send(random.choice(starter_encouragements))
+
 client.run(my_secret)
